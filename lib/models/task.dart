@@ -26,6 +26,22 @@ class Task {
     );
   }
 
+  // Factory constructor for Firebase Realtime Database format
+  factory Task.fromFirebaseJson(String id, Map<String, dynamic> json) {
+    return Task(
+      id: id,
+      title: json['title'] as String? ?? '',
+      description: json['description'] as String?,
+      completed: json['completed'] as bool? ?? false,
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'] as String)
+          : DateTime.now(),
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'] as String)
+          : DateTime.now(),
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,

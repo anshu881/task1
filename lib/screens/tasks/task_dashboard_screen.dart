@@ -130,25 +130,52 @@ class _TaskDashboardScreenState extends ConsumerState<TaskDashboardScreen> {
                   ),
                   onChanged: _handleSearch,
                 ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    const Text('Filter by status: '),
-                    Expanded(
-                      child: SegmentedButton<String?>(
-                        segments: const [
-                          ButtonSegment(value: null, label: Text('All')),
-                          ButtonSegment(value: 'completed', label: Text('Done')),
-                          ButtonSegment(
-                              value: 'pending', label: Text('Pending')),
+                  const SizedBox(height: 12),
+                // Responsive filter section
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    if (constraints.maxWidth > 600) {
+                      // Desktop/Tablet layout
+                      return Row(
+                        children: [
+                          const Text('Filter by status: '),
+                          Expanded(
+                            child: SegmentedButton<String?>(
+                              segments: const [
+                                ButtonSegment(value: null, label: Text('All')),
+                                ButtonSegment(value: 'completed', label: Text('Done')),
+                                ButtonSegment(value: 'pending', label: Text('Pending')),
+                              ],
+                              selected: {_selectedStatus},
+                              onSelectionChanged: (Set<String?> selected) {
+                                _handleStatusFilter(selected.first);
+                              },
+                            ),
+                          ),
                         ],
-                        selected: {_selectedStatus},
-                        onSelectionChanged: (Set<String?> selected) {
-                          _handleStatusFilter(selected.first);
-                        },
-                      ),
-                    ),
-                  ],
+                      );
+                    } else {
+                      // Mobile layout
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Text('Filter by status: '),
+                          const SizedBox(height: 8),
+                          SegmentedButton<String?>(
+                            segments: const [
+                              ButtonSegment(value: null, label: Text('All')),
+                              ButtonSegment(value: 'completed', label: Text('Done')),
+                              ButtonSegment(value: 'pending', label: Text('Pending')),
+                            ],
+                            selected: {_selectedStatus},
+                            onSelectionChanged: (Set<String?> selected) {
+                              _handleStatusFilter(selected.first);
+                            },
+                          ),
+                        ],
+                      );
+                    }
+                  },
                 ),
               ],
             ),

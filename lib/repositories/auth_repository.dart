@@ -1,51 +1,60 @@
 import 'dart:async';
 import '../models/user.dart';
-import '../services/api_service.dart';
-import '../services/storage_service.dart';
+import '../services/firebase_auth_service.dart';
 
 class AuthRepository {
-  final ApiService _apiService = ApiService();
-  final StorageService _storageService = StorageService();
+  final FirebaseAuthService _authService = FirebaseAuthService();
   final _authStateController = StreamController<User?>.broadcast();
 
-  Stream<User?> get authStateStream => _authStateController.stream;
+  Stream<User?> get authStateStream {
+    // Listen to Firebase auth state changes
+    _authService.authStateChanges.listen((firebaseUser) {
+      if (firebaseUser != null) {
+        _authStateController.add(User(
+          id: firebaseUser.uid,
+          email: firebaseUser.email!,
+          name: firebaseUser.displayName ?? firebaseUser.email!.split('@')[0],
+        ));
+      } else {
+        _authStateController.add(null);
+      }
+    });
+    return _authStateController.stream;
+  }
 
   AuthRepository() {
     _checkAuthState();
   }
 
   Future<void> _checkAuthState() async {
-    try {
-      final user = await getCurrentUser();
-      _authStateController.add(user);
-    } catch (e) {
+    final firebaseUser = _authService.currentUser;
+    if (firebaseUser != null) {
+      _authStateController.add(User(
+        id: firebaseUser.uid,
+        email: firebaseUser.email!,
+        name: firebaseUser.displayName ?? firebaseUser.email!.split('@')[0],
+      ));
+    } else {
       _authStateController.add(null);
     }
   }
 
   Future<User?> getCurrentUser() async {
-    final accessToken = await _storageService.getAccessToken();
-    if (accessToken == null) {
+    final firebaseUser = _authService.currentUser;
+    if (firebaseUser == null) {
       _authStateController.add(null);
       return null;
     }
-    // Note: In production, you should implement a /auth/me endpoint
-    // to fetch the current user. For now, we check if token exists.
-    // The token validation will happen on the backend.
-    try {
-      // You can decode JWT here or call /auth/me endpoint
-      // For now, return null and let the app handle auth state via token
-      return null;
-    } catch (e) {
-      _authStateController.add(null);
-      return null;
-    }
+    return User(
+      id: firebaseUser.uid,
+      email: firebaseUser.email!,
+      name: firebaseUser.displayName ?? firebaseUser.email!.split('@')[0],
+    );
   }
 
   Future<User> register(String email, String password, String name) async {
     try {
-      final result = await _apiService.register(email, password, name);
-      final user = result['user'] as User;
+      final user = await _authService.signUpWithEmail(email, password, name);
       _authStateController.add(user);
       return user;
     } catch (e) {
@@ -56,8 +65,29 @@ class AuthRepository {
 
   Future<User> login(String email, String password) async {
     try {
-      final result = await _apiService.login(email, password);
-      final user = result['user'] as User;
+      final user = await _authService.signInWithEmail(email, password);
+      _authStateController.add(user);
+      return user;
+    } catch (e) {
+      _authStateController.add(null);
+      rethrow;
+    }
+  }
+
+  Future<User> signInWithGoogle() async {
+    try {
+      final user = await _authService.signInWithGoogle();
+      _authStateController.add(user);
+      return user;
+    } catch (e) {
+      _authStateController.add(null);
+      rethrow;
+    }
+  }
+
+  Future<User> signInAnonymously() async {
+    try {
+      final user = await _authService.signInAnonymously();
       _authStateController.add(user);
       return user;
     } catch (e) {
@@ -68,10 +98,9 @@ class AuthRepository {
 
   Future<void> logout() async {
     try {
-      await _apiService.logout();
+      await _authService.signOut();
       _authStateController.add(null);
     } catch (e) {
-      await _storageService.clearTokens();
       _authStateController.add(null);
       rethrow;
     }

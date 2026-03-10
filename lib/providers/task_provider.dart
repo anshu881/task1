@@ -27,17 +27,40 @@ class TaskNotifier extends StateNotifier<AsyncValue<List<Task>>> {
     }
 
     try {
-      final tasks = await _repository.getTasks(
-        page: _currentPage,
-        status: _statusFilter,
-        search: _searchQuery,
-      );
+      // For Firebase, we get all tasks and filter client-side
+      // This is more efficient for real-time updates
+      final allTasks = await _repository.getAllTasks();
+      
+      // Apply filters
+      List<Task> filteredTasks = allTasks;
+      
+      if (_searchQuery != null && _searchQuery!.isNotEmpty) {
+        filteredTasks = filteredTasks.where((task) {
+          return task.title.toLowerCase().contains(_searchQuery!.toLowerCase()) ||
+              (task.description?.toLowerCase().contains(_searchQuery!.toLowerCase()) ?? false);
+        }).toList();
+      }
+      
+      if (_statusFilter != null && _statusFilter!.isNotEmpty) {
+        if (_statusFilter == 'completed') {
+          filteredTasks = filteredTasks.where((task) => task.completed).toList();
+        } else if (_statusFilter == 'pending') {
+          filteredTasks = filteredTasks.where((task) => !task.completed).toList();
+        }
+      }
+      
+      // Apply pagination
+      final startIndex = (_currentPage - 1) * 10;
+      final endIndex = startIndex + 10;
+      final paginatedTasks = endIndex > filteredTasks.length
+          ? filteredTasks.sublist(startIndex)
+          : filteredTasks.sublist(startIndex, endIndex);
 
       if (refresh || _currentPage == 1) {
-        state = AsyncValue.data(tasks);
+        state = AsyncValue.data(filteredTasks);
       } else {
         final currentTasks = state.value ?? [];
-        state = AsyncValue.data([...currentTasks, ...tasks]);
+        state = AsyncValue.data([...currentTasks, ...paginatedTasks]);
       }
     } catch (e, stackTrace) {
       state = AsyncValue.error(e, stackTrace);

@@ -15,3 +15,8 @@ final currentUserProvider = FutureProvider<User?>((ref) async {
   final authRepository = ref.watch(authRepositoryProvider);
   return await authRepository.getCurrentUser();
 });
+
+final googleSignInProvider = FutureProvider.family<User, void>((ref, _) async {
+  final authRepository = ref.watch(authRepositoryProvider);
+  return await authRepository.signInWithGoogle();
+});
