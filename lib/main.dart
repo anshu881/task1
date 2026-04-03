@@ -1,45 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'screens/tasks/task_dashboard_screen.dart';
 
-void main() async {
+import 'screens/main_shell.dart';
+
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  try {
-    try {
-      Firebase.app();
-    } catch (_) {
-      try {
-        await Firebase.initializeApp();
-      } catch (e) {
-        debugPrint('Firebase initialization skipped: $e');
-      }
-    }
-  } catch (e) {
-    debugPrint('Firebase setup error (ignored): $e');
-  }
-  
   runApp(
     const ProviderScope(
-      child: TodoApp(),
+      child: InternalDemoApp(),
     ),
   );
 }
 
-class TodoApp extends ConsumerWidget {
-  const TodoApp({super.key});
+class InternalDemoApp extends StatelessWidget {
+  const InternalDemoApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'To-Do List App',
+      title: 'Internal demo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
         useMaterial3: true,
       ),
-      home: const TaskDashboardScreen(),
+      home: const MainShell(),
     );
   }
 }

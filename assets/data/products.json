@@ -1,0 +1,23 @@
+[
+  {
+    "id": 9001,
+    "name": "Bulk Paper Ream A4",
+    "moq": 10,
+    "dealerPrice": 4.25,
+    "retailPrice": 5.99
+  },
+  {
+    "id": 9002,
+    "name": "Thermal Label Roll 4x6",
+    "moq": 5,
+    "dealerPrice": 12.5,
+    "retailPrice": 16.75
+  },
+  {
+    "id": 9003,
+    "name": "Safety Gloves (carton)",
+    "moq": 20,
+    "dealerPrice": 89.0,
+    "retailPrice": 115.0
+  }
+]
